@@ -10,6 +10,7 @@ import Faq from './components/Faq/Faq';
 import AuthContainer from './components/Auth/AuthContainer';
 import PasswordReset from './components/Auth/PasswordReset';
 import CrearNuevaEvaluacion from './components/CrearNuevaEvaluacion';
+import VerEvaluacion from './components/VerEvaluacion';
 import { useAuth } from './contexts/AuthContext';
 import { useAppSelector } from './hooks/useAppSelector';
 
@@ -74,6 +75,22 @@ const App: React.FC = () => {
                 <Header session={session} />
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
                   <CrearNuevaEvaluacion />
+                </main>
+              </div>
+            </div>
+          ) : <AuthContainer />
+        } />
+        <Route path="/evaluacion/:id" element={
+          session ? (
+            <div className="flex h-screen bg-gray-100">
+              <Sidebar 
+                elementosMenu={getMenuItems()} 
+                menuActivo={menuActivo}
+              />
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <Header session={session} />
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
+                  <VerEvaluacion />
                 </main>
               </div>
             </div>

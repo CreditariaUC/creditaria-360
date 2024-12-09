@@ -46,8 +46,7 @@ const MisEvaluaciones: React.FC = () => {
   };
 
   const handleVerEvaluacion = (evaluacionId: string) => {
-    // Aquí irá la lógica para ver el detalle de la evaluación
-    console.log('Ver evaluación:', evaluacionId);
+    navigate(`/evaluacion/${evaluacionId}`);
   };
 
   if (loading) {

@@ -1,18 +1,22 @@
 import React from 'react';
 import MisEvaluaciones from './MisEvaluaciones';
+import Evaluaciones from './Evaluaciones';
 import MiRetroalimentacion from './MiRetroalimentacion';
 import IniciarEvaluacion from './IniciarEvaluacion';
 import RendimientoEquipo from './RendimientoEquipo';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PropsDashboard {
   menuActivo: string;
 }
 
 const Dashboard: React.FC<PropsDashboard> = ({ menuActivo }) => {
+  const { profile } = useAuth();
+
   const renderizarContenido = () => {
     switch (menuActivo) {
       case 'mis-evaluaciones':
-        return <MisEvaluaciones />;
+        return profile?.role === 'admin' ? <Evaluaciones /> : <MisEvaluaciones />;
       case 'mi-retroalimentacion':
         return <MiRetroalimentacion />;
       case 'iniciar-evaluacion':

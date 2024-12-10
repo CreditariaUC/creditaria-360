@@ -19,7 +19,7 @@ const MisEvaluaciones: React.FC = () => {
   const cargarEvaluaciones = async () => {
     try {
       setLoading(true);
-      const data = await evaluationService.getEvaluations();
+      const data = await evaluationService.getMyEvaluations();
       setEvaluaciones(data);
     } catch (error) {
       console.error('Error al cargar evaluaciones:', error);
@@ -61,12 +61,6 @@ const MisEvaluaciones: React.FC = () => {
     <div className="bg-white shadow-md rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-semibold text-gray-800">Mis Evaluaciones</h3>
-        <Button 
-          color="primary"
-          onClick={() => navigate('/crear-evaluacion')}
-        >
-          Crear Evaluación
-        </Button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">

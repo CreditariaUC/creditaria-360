@@ -25,6 +25,7 @@ import {
   Select,
   SelectItem
 } from '@nextui-org/react';
+import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { evaluationService } from '../services/evaluation.service';
@@ -55,13 +56,23 @@ const CrearNuevaEvaluacion: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [usuariosSeleccionados, setUsuariosSeleccionados] = useState<Selection>(new Set([]));
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: 'full_name',
     direction: 'ascending'
   });
   const [filterValue, setFilterValue] = useState('');
   const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState<string>('all');
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const departamentos = useMemo(() => {
     const deps = new Set(usuarios.map(user => user.department).filter(Boolean));
@@ -95,7 +106,7 @@ const CrearNuevaEvaluacion: React.FC = () => {
     } else {
       setUsuariosSeleccionados(new Set([]));
       setDepartamentoSeleccionado('all');
-      setRowsPerPage(5);
+      setRowsPerPage(10);
     }
   }, [empleadoSeleccionado, usuarios]);
 
@@ -124,6 +135,14 @@ const CrearNuevaEvaluacion: React.FC = () => {
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
       toast.error('Error al cargar la lista de usuarios');
+    }
+  };
+
+  const handleSelectAllCriteria = () => {
+    if (criteriosSeleccionados.size === criterios.length) {
+      setCriteriosSeleccionados(new Set([]));
+    } else {
+      setCriteriosSeleccionados(new Set(criterios.map(c => c.id)));
     }
   };
 
@@ -178,157 +197,199 @@ const CrearNuevaEvaluacion: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg shadow">
-      <h2 className="text-2xl font-semibold">Crear Nueva Evaluación</h2>
-
-      <div className="space-y-4">
-        <RadioGroup
-          label="Tipo de Evaluación"
-          value={tipoEvaluacion}
-          onValueChange={setTipoEvaluacion as (value: string) => void}
+    <div className="space-y-6">
+      <div className={`fixed top-4 left-[283px] z-50 transition-opacity duration-300 ${
+        isScrolled ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}>
+        <Button
+          variant="solid"
+          color="primary"
+          startContent={<ArrowLeft size={20} />}
+          onPress={() => navigate('/mis-evaluaciones')}
+          className="shadow-lg"
         >
-          <Radio value="180" description="Evaluación entre pares y supervisor directo">
-            Evaluación 180°
-          </Radio>
-          <Radio value="simple" description="Evaluación individual o específica">
-            Evaluación Simple
-          </Radio>
-        </RadioGroup>
+          Regresar
+        </Button>
+      </div>
 
-        <Input
-          label="Nombre de la Evaluación"
-          placeholder="Ingrese el nombre de la evaluación"
-          value={nombreEvaluacion}
-          onChange={(e) => setNombreEvaluacion(e.target.value)}
-        />
-
-        <Input
-          type="date"
-          label="Fecha Límite"
-          value={fechaLimite}
-          onChange={(e) => setFechaLimite(e.target.value)}
-        />
-
-        <Autocomplete
-          label="Empleado a Evaluar"
-          placeholder="Seleccione un empleado"
-          selectedKey={empleadoSeleccionado}
-          onSelectionChange={(key) => setEmpleadoSeleccionado(key as string)}
-          className="max-w-full"
+      <div className={`flex items-center gap-4 ${isScrolled ? 'invisible' : ''}`}>
+        <Button
+          variant="light"
+          startContent={<ArrowLeft size={20} />}
+          onPress={() => navigate('/mis-evaluaciones')}
         >
-          {usuarios.map((usuario) => (
-            <AutocompleteItem key={usuario.id} value={usuario.id} textValue={usuario.full_name}>
-              {usuario.full_name} - {usuario.department}
-            </AutocompleteItem>
-          ))}
-        </Autocomplete>
+          Regresar
+        </Button>
+      </div>
 
-        <div>
-          <CheckboxGroup
-            label="Criterios a Evaluar"
-            value={Array.from(criteriosSeleccionados)}
-            onChange={(value) => setCriteriosSeleccionados(new Set(value))}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <h2 className="text-2xl font-semibold mb-6">Crear Nueva Evaluación</h2>
+
+        <div className="space-y-6">
+          <RadioGroup
+            label="Tipo de Evaluación"
+            value={tipoEvaluacion}
+            onValueChange={setTipoEvaluacion as (value: string) => void}
           >
-            {criterios.map((criterio) => (
-              <Checkbox key={criterio.id} value={criterio.id}>
-                {criterio.name}
-              </Checkbox>
+            <Radio value="180" description="Evaluación entre pares y supervisor directo">
+              Evaluación 180°
+            </Radio>
+            <Radio value="simple" description="Evaluación individual o específica">
+              Evaluación Simple
+            </Radio>
+          </RadioGroup>
+
+          <Input
+            label="Nombre de la Evaluación"
+            placeholder="Ingrese el nombre de la evaluación"
+            value={nombreEvaluacion}
+            onChange={(e) => setNombreEvaluacion(e.target.value)}
+          />
+
+          <Input
+            type="date"
+            label="Fecha Límite"
+            value={fechaLimite}
+            onChange={(e) => setFechaLimite(e.target.value)}
+          />
+
+          <Autocomplete
+            label="Empleado a Evaluar"
+            placeholder="Seleccione un empleado"
+            selectedKey={empleadoSeleccionado}
+            onSelectionChange={(key) => setEmpleadoSeleccionado(key as string)}
+            className="max-w-full"
+          >
+            {usuarios.map((usuario) => (
+              <AutocompleteItem key={usuario.id} value={usuario.id} textValue={usuario.full_name}>
+                {usuario.full_name} - {usuario.department}
+              </AutocompleteItem>
             ))}
-          </CheckboxGroup>
-        </div>
+          </Autocomplete>
 
-        <div>
-          <div className="flex justify-between items-center mb-4 gap-4">
-            <div className="flex gap-4 flex-1">
-              <Input
-                placeholder="Buscar usuarios..."
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-                className="w-72"
-              />
-              <Select
-                label="Departamento"
-                placeholder="Filtrar por departamento"
-                selectedKeys={[departamentoSeleccionado]}
-                onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
-                className="w-72"
-              >
-                <SelectItem key="all" value="all">
-                  Todos los departamentos
-                </SelectItem>
-                {departamentos.map((dep) => (
-                  <SelectItem key={dep} value={dep}>
-                    {dep}
+          <div>
+            <div className="flex justify-between items-center mb-4 gap-4">
+              <div className="flex gap-4 flex-1">
+                <Input
+                  placeholder="Buscar usuarios..."
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                  className="w-72"
+                />
+                <Select
+                  label="Departamento"
+                  placeholder="Filtrar por departamento"
+                  selectedKeys={[departamentoSeleccionado]}
+                  onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
+                  className="w-72"
+                >
+                  <SelectItem key="all" value="all">
+                    Todos los departamentos
                   </SelectItem>
-                ))}
-              </Select>
+                  {departamentos.map((dep) => (
+                    <SelectItem key={dep} value={dep}>
+                      {dep}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="flat">
+                    Filas por página: {rowsPerPage}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Filas por página"
+                  onAction={(key) => setRowsPerPage(Number(key))}
+                >
+                  {[10, 25, 100, 'Todos'].map((amount) => (
+                    <DropdownItem key={amount === 'todos' ? filteredUsers.length : amount}>
+                      {amount}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
             </div>
-            <Dropdown>
-              <DropdownTrigger>
-                <Button variant="flat">
-                  Filas por página: {rowsPerPage}
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="Filas por página"
-                onAction={(key) => setRowsPerPage(Number(key))}
+
+            <Table
+              aria-label="Tabla de usuarios"
+              selectionMode="multiple"
+              selectedKeys={usuariosSeleccionados}
+              onSelectionChange={setUsuariosSeleccionados}
+              sortDescriptor={sortDescriptor}
+              onSortChange={setSortDescriptor}
+            >
+              <TableHeader>
+                <TableColumn key="full_name" allowsSorting>Nombre</TableColumn>
+                <TableColumn key="email" allowsSorting>Correo</TableColumn>
+                <TableColumn key="department" allowsSorting>Departamento</TableColumn>
+              </TableHeader>
+              <TableBody items={items}>
+                {(item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.full_name}</TableCell>
+                    <TableCell>{item.email}</TableCell>
+                    <TableCell>{item.department}</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+
+            <div className="flex justify-center mt-4">
+              <Pagination
+                total={pages}
+                page={page}
+                onChange={setPage}
+              />
+            </div>
+          </div>
+
+          <div className="border-t pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Criterios a Evaluar</h3>
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={handleSelectAllCriteria}
               >
-                {[5, 10, 20, 'todos'].map((amount) => (
-                  <DropdownItem key={amount === 'todos' ? filteredUsers.length : amount}>
-                    {amount}
-                  </DropdownItem>
+                {criteriosSeleccionados.size === criterios.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+              </Button>
+            </div>
+            <CheckboxGroup
+              value={Array.from(criteriosSeleccionados)}
+              onChange={(value) => setCriteriosSeleccionados(new Set(value))}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {criterios.map((criterio) => (
+                  <div key={criterio.id} className="p-4 border rounded-lg bg-default-50">
+                    <Checkbox value={criterio.id} className="mb-2">
+                      <div className="flex flex-col gap-1">
+                        <p className="font-medium">{criterio.name}</p>
+                        <p className="text-sm text-gray-500">{criterio.description}</p>
+                      </div>
+                    </Checkbox>
+                  </div>
                 ))}
-              </DropdownMenu>
-            </Dropdown>
+              </div>
+            </CheckboxGroup>
           </div>
 
-          <Table
-            aria-label="Tabla de usuarios"
-            selectionMode="multiple"
-            selectedKeys={usuariosSeleccionados}
-            onSelectionChange={setUsuariosSeleccionados}
-            sortDescriptor={sortDescriptor}
-            onSortChange={setSortDescriptor}
-          >
-            <TableHeader>
-              <TableColumn key="full_name" allowsSorting>Nombre</TableColumn>
-              <TableColumn key="email" allowsSorting>Correo</TableColumn>
-              <TableColumn key="department" allowsSorting>Departamento</TableColumn>
-            </TableHeader>
-            <TableBody items={items}>
-              {(item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.full_name}</TableCell>
-                  <TableCell>{item.email}</TableCell>
-                  <TableCell>{item.department}</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-
-          <div className="flex justify-center mt-4">
-            <Pagination
-              total={pages}
-              page={page}
-              onChange={setPage}
-            />
+          <div className="flex justify-end gap-4 mt-6">
+            <Button
+              color="danger"
+              variant="ghost"
+              onClick={() => navigate('/mis-evaluaciones')}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="primary"
+              onClick={handleGuardar}
+            >
+              Guardar Evaluación
+            </Button>
           </div>
-        </div>
-
-        <div className="flex justify-end gap-4 mt-6">
-          <Button
-            color="danger"
-            variant="light"
-            onClick={() => navigate('/mis-evaluaciones')}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="primary"
-            onClick={handleGuardar}
-          >
-            Guardar Evaluación
-          </Button>
         </div>
       </div>
     </div>

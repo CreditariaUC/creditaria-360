@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Settings, LogOut, User, Check } from 'lucide-react';
+import { Bell, Settings, LogOut, User, Menu } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import type { Session } from '@supabase/supabase-js';
@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { setNotifications, markAsRead, markAllAsRead, removeNotification } from '../store/slices/notificationSlice';
+import { toggleSidebar } from '../store/slices/uiSlice';
 import { notificationService } from '../services/notification.service';
 import NotificationList from './Notifications/NotificationList';
 import {
@@ -118,9 +119,21 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
         isBordered 
         className="bg-content1"
         classNames={{
-          wrapper: "max-w-full px-4 justify-end"
+          wrapper: "max-w-full px-4"
         }}
       >
+        <NavbarContent justify="start">
+          <NavbarItem className="lg:hidden">
+            <Button
+              isIconOnly
+              variant="light"
+              onClick={() => dispatch(toggleSidebar())}
+            >
+              <Menu size={24} />
+            </Button>
+          </NavbarItem>
+        </NavbarContent>
+
         <NavbarContent className="gap-4" justify="end">
           <NavbarItem>
             <Popover placement="bottom-end">
@@ -153,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                   variant="light" 
                   className="flex items-center gap-2"
                 >
-                  <span className="hidden sm:block">{session.user.email}</span>
+                  <span className="hidden sm:block">{profile?.full_name || session.user.email}</span>
                   <Avatar
                     icon={<User size={20} />}
                     classNames={{

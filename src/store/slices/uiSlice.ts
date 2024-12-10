@@ -4,12 +4,14 @@ interface UIState {
   activeMenu: string;
   showSettings: boolean;
   theme: 'light' | 'dark';
+  isSidebarOpen: boolean;
 }
 
 const initialState: UIState = {
   activeMenu: 'mis-evaluaciones',
   showSettings: false,
   theme: 'light',
+  isSidebarOpen: false,
 };
 
 const uiSlice = createSlice({
@@ -25,8 +27,20 @@ const uiSlice = createSlice({
     setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
       state.theme = action.payload;
     },
+    toggleSidebar: (state) => {
+      state.isSidebarOpen = !state.isSidebarOpen;
+    },
+    closeSidebar: (state) => {
+      state.isSidebarOpen = false;
+    },
   },
 });
 
-export const { setActiveMenu, toggleSettings, setTheme } = uiSlice.actions;
+export const { 
+  setActiveMenu, 
+  toggleSettings, 
+  setTheme, 
+  toggleSidebar,
+  closeSidebar 
+} = uiSlice.actions;
 export default uiSlice.reducer;

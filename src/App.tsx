@@ -20,7 +20,7 @@ const App: React.FC = () => {
 
   const getMenuItems = () => {
     const baseItems = [
-      { id: 'mis-evaluaciones', etiqueta: 'Mis Evaluaciones', icono: <ClipboardList size={20} /> },
+      { id: 'mis-evaluaciones', etiqueta: profile?.role === 'admin' ? 'Evaluaciones' : 'Mis Evaluaciones', icono: <ClipboardList size={20} /> },
       { id: 'mi-retroalimentacion', etiqueta: 'Mi Retroalimentación', icono: <MessageSquare size={20} /> },
       { id: 'rendimiento-equipo', etiqueta: 'Rendimiento', icono: <PieChart size={20} /> },
       { id: 'faq', etiqueta: 'Ayuda', icono: <HelpCircle size={20} /> },
@@ -60,41 +60,30 @@ const App: React.FC = () => {
     );
   }
 
+  const renderAuthenticatedLayout = (children: React.ReactNode) => (
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar 
+        elementosMenu={getMenuItems()} 
+        menuActivo={menuActivo}
+      />
+      <div className="flex-1">
+        <Header session={session} />
+        <main className="p-6 overflow-x-hidden overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/reset-password" element={<PasswordReset />} />
         <Route path="/crear-evaluacion" element={
-          session ? (
-            <div className="flex h-screen bg-gray-100">
-              <Sidebar 
-                elementosMenu={getMenuItems()} 
-                menuActivo={menuActivo}
-              />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <Header session={session} />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
-                  <CrearNuevaEvaluacion />
-                </main>
-              </div>
-            </div>
-          ) : <AuthContainer />
+          session ? renderAuthenticatedLayout(<CrearNuevaEvaluacion />) : <AuthContainer />
         } />
         <Route path="/evaluacion/:id" element={
-          session ? (
-            <div className="flex h-screen bg-gray-100">
-              <Sidebar 
-                elementosMenu={getMenuItems()} 
-                menuActivo={menuActivo}
-              />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <Header session={session} />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
-                  <VerEvaluacion />
-                </main>
-              </div>
-            </div>
-          ) : <AuthContainer />
+          session ? renderAuthenticatedLayout(<VerEvaluacion />) : <AuthContainer />
         } />
         <Route
           path="/*"
@@ -102,18 +91,7 @@ const App: React.FC = () => {
             !session ? (
               <AuthContainer />
             ) : (
-              <div className="flex h-screen bg-gray-100">
-                <Sidebar 
-                  elementosMenu={getMenuItems()} 
-                  menuActivo={menuActivo}
-                />
-                <div className="flex flex-col flex-1 overflow-hidden">
-                  <Header session={session} />
-                  <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
-                    {renderizarContenido()}
-                  </main>
-                </div>
-              </div>
+              renderAuthenticatedLayout(renderizarContenido())
             )
           }
         />

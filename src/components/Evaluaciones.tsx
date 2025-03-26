@@ -232,6 +232,8 @@ const Evaluaciones: React.FC = () => {
                           <Eye size={20} />
                         </Button>
                       </Tooltip>
+                      
+                      {new Date(evaluacion.end_date) > new Date() && (
                       <Tooltip content={evaluacion.start_date ? "Detener evaluación" : "Iniciar evaluación"}>
                         <Button
                           isIconOnly
@@ -243,6 +245,8 @@ const Evaluaciones: React.FC = () => {
                           {evaluacion.start_date ? <Pause size={20} /> : <Play size={20} />}
                         </Button>
                       </Tooltip>
+                    )}
+
                     </div>
                   </td>
                 </tr>

@@ -51,10 +51,14 @@ const MisEvaluaciones: React.FC = () => {
       setLoading(true);
       const allEvaluations = await evaluationService.getEvaluations();
       
-      const misEvaluaciones = allEvaluations.filter(evaluacion => 
-        evaluacion.start_date !== null &&
-        evaluacion.participants.some((p: ParticipantStatus) => p.id === user.id)
-      );
+      const today = new Date();
+today.setHours(0, 0, 0, 0); // Establece la hora a 00:00:00 para comparar solo fechas
+
+const misEvaluaciones = allEvaluations.filter(evaluacion => 
+  evaluacion.start_date !== null &&
+  new Date(evaluacion.start_date) <= today &&
+  evaluacion.participants.some((p: ParticipantStatus) => p.id === user.id)
+);
       
       const { data: responsesData, error: responsesError } = await supabase
         .from('evaluation_responses')

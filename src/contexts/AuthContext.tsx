@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '../types/auth.types';
 import { authService } from '../services/auth.service';
 import { profileService } from '../services/profile.service';
-import toast from 'react-hot-toast';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppSelector';
+import { setSession, setProfile, setLoading, setError } from '../store/slices/authSlice';
 
 interface AuthContextType {
   session: Session | null;
@@ -28,20 +30,19 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const { session, user, profile, loading } = useAppSelector(state => state.auth);
 
   const loadProfile = async (userId: string) => {
     try {
       const profile = await profileService.getProfile(userId);
       if (profile) {
-        setProfile(profile);
+        dispatch(setProfile(profile));
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      setProfile(null);
+      dispatch(setProfile(null));
+      dispatch(setError('Error loading profile'));
     }
   };
 
@@ -55,15 +56,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
 
         if (initialSession) {
-          setSession(initialSession);
-          setUser(initialSession.user);
+          dispatch(setSession(initialSession));
           await loadProfile(initialSession.user.id);
         }
       } catch (error) {
         console.error('Error during initialization:', error);
+        dispatch(setError('Error during initialization'));
       } finally {
         if (mounted) {
-          setLoading(false);
+          dispatch(setLoading(false));
         }
       }
     };
@@ -73,13 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = authService.onAuthStateChange(async (session, user) => {
       if (!mounted) return;
 
-      setSession(session);
-      setUser(user);
+      dispatch(setSession(session));
 
       if (user) {
         await loadProfile(user.id);
       } else {
-        setProfile(null);
+        dispatch(setProfile(null));
       }
     });
 
@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [dispatch]);
 
   return (
     <AuthContext.Provider value={{ session, user, profile, loading }}>

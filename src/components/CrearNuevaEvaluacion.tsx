@@ -47,7 +47,7 @@ interface Usuario {
 
 const CrearNuevaEvaluacion: React.FC = () => {
   const navigate = useNavigate();
-  const [tipoEvaluacion, setTipoEvaluacion] = useState<EvaluationType | ''>('360');
+  const [tipoEvaluacion, setTipoEvaluacion] = useState<EvaluationType | ''>('simple');
   const [nombreEvaluacion, setNombreEvaluacion] = useState<string>('');
   const [fechaLimite, setFechaLimite] = useState<string>('');
   const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState<string>('');
@@ -302,9 +302,9 @@ const CrearNuevaEvaluacion: React.FC = () => {
             isRequired
             onValueChange={setTipoEvaluacion as (value: string) => void}
           >
-            <Radio value="360" description="Evaluación entre pares y supervisor directo">
+            {/*<Radio value="360" description="Evaluación entre pares y supervisor directo">
               Evaluación 360°
-            </Radio>
+            </Radio>*/}
             <Radio value="simple" description="Evaluación individual o específica">
               Evaluación Simple
             </Radio>

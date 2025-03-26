@@ -13,6 +13,7 @@ import CrearNuevaEvaluacion from './components/CrearNuevaEvaluacion';
 import VerEvaluacion from './components/VerEvaluacion';
 import RealizarEvaluacion from './components/Evaluacion/RealizarEvaluacion';
 import Evaluacion360 from './components/Evaluacion/Evaluacion360';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
 
 const App: React.FC = () => {
@@ -73,27 +74,47 @@ const App: React.FC = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/reset-password" element={<PasswordReset />} />
+        
+        {/* Protected Admin Routes */}
+        <Route path="/evaluaciones" element={
+          <ProtectedRoute requireAdmin>
+            {renderAuthenticatedLayout(<Dashboard menuActivo="evaluaciones" />)}
+          </ProtectedRoute>
+        } />
         <Route path="/crear-evaluacion" element={
-          session ? renderAuthenticatedLayout(<CrearNuevaEvaluacion />) : <AuthContainer />
+          <ProtectedRoute requireAdmin>
+            {renderAuthenticatedLayout(<CrearNuevaEvaluacion />)}
+          </ProtectedRoute>
         } />
         <Route path="/evaluacion/:id" element={
-          session ? renderAuthenticatedLayout(<VerEvaluacion />) : <AuthContainer />
+          <ProtectedRoute requireAdmin>
+            {renderAuthenticatedLayout(<VerEvaluacion />)}
+          </ProtectedRoute>
+        } />
+
+        {/* Protected User Routes */}
+        <Route path="/mis-evaluaciones" element={
+          <ProtectedRoute>
+            {renderAuthenticatedLayout(<Dashboard menuActivo="mis-evaluaciones" />)}
+          </ProtectedRoute>
         } />
         <Route path="/realizar-evaluacion/:id" element={
-          session ? renderAuthenticatedLayout(<RealizarEvaluacion />) : <AuthContainer />
+          <ProtectedRoute>
+            {renderAuthenticatedLayout(<RealizarEvaluacion />)}
+          </ProtectedRoute>
         } />
         <Route path="/evaluacion-360/:id" element={
-          session ? renderAuthenticatedLayout(<Evaluacion360 />) : <AuthContainer />
-        } />
-        <Route path="/evaluaciones" element={
-          session ? renderAuthenticatedLayout(<Dashboard menuActivo="evaluaciones" />) : <AuthContainer />
-        } />
-        <Route path="/mis-evaluaciones" element={
-          session ? renderAuthenticatedLayout(<Dashboard menuActivo="mis-evaluaciones" />) : <AuthContainer />
+          <ProtectedRoute>
+            {renderAuthenticatedLayout(<Evaluacion360 />)}
+          </ProtectedRoute>
         } />
         <Route path="/faq" element={
-          session ? renderAuthenticatedLayout(<Faq />) : <AuthContainer />
+          <ProtectedRoute>
+            {renderAuthenticatedLayout(<Faq />)}
+          </ProtectedRoute>
         } />
+
+        {/* Public Routes */}
         <Route
           path="/"
           element={

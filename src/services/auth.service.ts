@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { store } from '../store';
-import { resetAuth } from '../store/slices/authSlice';
+import { clearAuth } from '../store/slices/authSlice';
 import { resetEvaluation } from '../store/slices/evaluationSlice';
 import { resetUI } from '../store/slices/uiSlice';
 import { resetNotification } from '../store/slices/notificationSlice';
@@ -18,7 +18,7 @@ export const authService = {
 
   async signOut(): Promise<{ error: AuthError | null }> {
     // Reset all Redux states first
-    store.dispatch(resetAuth());
+    store.dispatch(clearAuth());
     store.dispatch(resetEvaluation());
     store.dispatch(resetUI());
     store.dispatch(resetNotification());

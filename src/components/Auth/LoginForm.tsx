@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { Mail, Lock, Loader2, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { setActiveMenu } from '../../store/slices/uiSlice';
 import { z } from 'zod';
 import { Input, Button, Card, CardBody, CardHeader, Divider } from '@nextui-org/react';
+import Logo from '../Logo';
 
 const loginSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -13,6 +16,7 @@ const loginSchema = z.object({
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
 
@@ -35,7 +39,7 @@ const LoginForm: React.FC = () => {
       
       loginSchema.parse({ email, password });
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -45,6 +49,18 @@ const LoginForm: React.FC = () => {
           throw new Error('Credenciales inválidas');
         }
         throw error;
+      }
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile) {
+          dispatch(setActiveMenu(profile.role === 'admin' ? 'evaluaciones' : 'mis-evaluaciones'));
+        }
       }
       
       toast.success('¡Bienvenido de nuevo!');
@@ -77,7 +93,6 @@ const LoginForm: React.FC = () => {
       });
 
       if (error) throw error;
-      
       toast.success('Revisa tu correo para el enlace mágico');
     } catch (error) {
       if (error instanceof Error) {
@@ -93,7 +108,10 @@ const LoginForm: React.FC = () => {
   return (
     <Card className="max-w-md w-full">
       <CardHeader className="flex flex-col gap-2 items-center">
-        <h2 className="text-2xl font-bold">Eval 360°</h2>
+        <div className="flex items-center gap-2">
+          <Logo className="w-8 h-8" />
+          <h2 className="text-2xl font-bold">Eval 360°</h2>
+        </div>
         <p className="text-sm text-default-500">
           {resetMode ? 'Ingresa tu correo para restablecer la contraseña' : 'Ingresa tus credenciales para acceder'}
         </p>

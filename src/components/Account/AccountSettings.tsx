@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { User, Shield, Loader2 } from 'lucide-react';
 import { profileService } from '../../services/profile.service';
 import toast from 'react-hot-toast';
+import { Tabs, Tab, Input, Button, Spinner } from '@nextui-org/react';
 import { z } from 'zod';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Profile } from '../../types/auth.types';
 import { supabase } from '../../lib/supabase';
+
+
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'El nombre completo debe tener al menos 2 caracteres'),
@@ -81,36 +84,29 @@ const AccountSettings: React.FC = () => {
   if (!profile) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+        <Spinner size="lg" color="primary" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white shadow-sm rounded-lg">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6" aria-label="Pestañas">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center py-4 px-1 border-b-2 font-medium text-sm
-                  ${activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
-                `}
-              >
-                {tab.icon}
-                <span className="ml-2">{tab.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-6">
-          {activeTab === 'profile' && (
+    <div className="w-full">
+      <Tabs 
+        color="primary" variant="bordered"
+        aria-label="Opciones"
+        selectedKey={activeTab}
+        onSelectionChange={(key) => setActiveTab(key as string)}
+      >
+        <Tab
+          key="profile"
+          title={
+            <div className="flex items-center gap-2">
+              <User size={18} />
+              <span>Perfil</span>
+            </div>
+          }
+        >
+          <div className="mt-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -118,62 +114,46 @@ const AccountSettings: React.FC = () => {
               }}
               className="space-y-6"
             >
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Correo Electrónico
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={profile.email || ''}
-                  disabled
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
+      
 
-              <div>
-                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  id="full_name"
-                  name="full_name"
-                  defaultValue={profile.full_name || ''}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
+              <Input
+                type="text"
+                label="Nombre Completo"
+                name="full_name"
+                defaultValue={profile.full_name || ''}
+              />
 
-              <div>
-                <label htmlFor="department" className="block text-sm font-medium text-gray-700">
-                  Departamento
-                </label>
-                <input
-                  type="text"
-                  id="department"
-                  name="department"
-                  defaultValue={profile.department || ''}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
+              <Input
+                type="text"
+                label="Departamento"
+                name="department"
+                defaultValue={profile.department || ''}
+              />
 
               <div className="flex justify-end">
-                <button
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  color="primary"
+                  isLoading={loading}
+                  spinner={<Spinner size="sm" />}
                 >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    'Guardar Cambios'
-                  )}
-                </button>
+                  Guardar Cambios
+                </Button>
               </div>
             </form>
-          )}
+          </div>
+        </Tab>
 
-          {activeTab === 'security' && (
+        <Tab
+          key="security"
+          title={
+            <div className="flex items-center gap-2">
+              <Shield size={18} />
+              <span>Seguridad</span>
+            </div>
+          }
+        >
+          <div className="mt-4">
             <form
               id="password-form"
               onSubmit={(e) => {
@@ -182,51 +162,36 @@ const AccountSettings: React.FC = () => {
               }}
               className="space-y-6"
             >
-              <div>
-                <label htmlFor="new_password" className="block text-sm font-medium text-gray-700">
-                  Nueva Contraseña
-                </label>
-                <input
-                  type="password"
-                  id="new_password"
-                  name="new_password"
-                  required
-                  minLength={6}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
+              <Input
+                type="password"
+                label="Nueva Contraseña"
+                name="new_password"
+                required
+                minLength={6}
+              />
 
-              <div>
-                <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700">
-                  Confirmar Nueva Contraseña
-                </label>
-                <input
-                  type="password"
-                  id="confirm_password"
-                  name="confirm_password"
-                  required
-                  minLength={6}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                />
-              </div>
+              <Input
+                type="password"
+                label="Confirmar Nueva Contraseña"
+                name="confirm_password"
+                required
+                minLength={6}
+              />
 
               <div className="flex justify-end">
-                <button
+                <Button
                   type="submit"
-                  disabled={loading}
-                  className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  color="primary"
+                  isLoading={loading}
+                  spinner={<Spinner size="sm" />}
                 >
-                  {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    'Actualizar Contraseña'
-                  )}
-                </button>
+                  Actualizar Contraseña
+                </Button>
               </div>
             </form>
-          )}
-        </div>
-      </div>
+          </div>
+        </Tab>
+      </Tabs>
     </div>
   );
 };

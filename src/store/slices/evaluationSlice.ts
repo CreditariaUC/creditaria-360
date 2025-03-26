@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAction, PayloadAction } from '@reduxjs/toolkit';
 
 interface Evaluation {
   id: number;
@@ -6,6 +6,7 @@ interface Evaluation {
   status: 'pending' | 'in_progress' | 'completed';
   score?: number;
 }
+
 
 interface EvaluationState {
   evaluations: Evaluation[];
@@ -19,9 +20,16 @@ const initialState: EvaluationState = {
   error: null,
 };
 
+
+export const resetEvaluation = createAction('evaluation/reset');
+
 const evaluationSlice = createSlice({
   name: 'evaluation',
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(resetEvaluation, () => initialState);
+  },
+
   reducers: {
     setEvaluations: (state, action: PayloadAction<Evaluation[]>) => {
       state.evaluations = action.payload;

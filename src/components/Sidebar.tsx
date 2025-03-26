@@ -4,6 +4,7 @@ import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { setActiveMenu, closeSidebar } from '../store/slices/uiSlice';
 import { Button, Link } from '@nextui-org/react';
+import Logo from './Logo';
 
 interface ElementoMenu {
   id: string;
@@ -55,8 +56,8 @@ const Sidebar: React.FC<PropsSidebar> = ({ elementosMenu, menuActivo }) => {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex-1 overflow-y-auto py-7 px-2">
-          <div className="flex items-center space-x-2 px-4 mb-8">
-            <Users size={24} className="text-primary" />
+          <div className="flex items-center gap-2 px-4 mb-8">
+            <Logo className="w-6 h-6" />
             <span className="text-2xl font-extrabold">Eval 360°</span>
           </div>
           <nav className="space-y-2">

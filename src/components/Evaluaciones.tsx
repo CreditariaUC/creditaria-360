@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Progress } from '@nextui-org/react';
-import { Eye, Play } from 'lucide-react';
+import { Button, Progress, Chip, Tooltip, Card, CardBody } from '@nextui-org/react';
+import { Eye, Play, Pause, ClipboardList } from 'lucide-react';
 import { evaluationService } from '../services/evaluation.service';
 import { calculateRemainingDays } from '../utils/dateUtils';
-import type { Evaluation } from '../types/evaluation.types';
+import { calculateEvaluationProgress, determineEvaluationStatus, getStatusColor, getStatusText } from '../utils/evaluationUtils';
+import type { Evaluation, ParticipantStatus } from '../types/evaluation.types';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 const Evaluaciones: React.FC = () => {
@@ -14,13 +16,62 @@ const Evaluaciones: React.FC = () => {
 
   useEffect(() => {
     cargarEvaluaciones();
+
+    // Set up real-time subscription for evaluation updates
+    const subscription = supabase
+      .channel('evaluations_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'evaluations'
+        },
+        () => {
+          cargarEvaluaciones();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const cargarEvaluaciones = async () => {
     try {
       setLoading(true);
       const data = await evaluationService.getEvaluations();
-      setEvaluaciones(data);
+      
+      // Get all evaluation responses
+      const { data: responses } = await supabase
+        .from('evaluation_responses')
+        .select('evaluation_id, evaluation_participant_id, evaluated_id');
+      
+      // Calculate progress and update status for each evaluation
+      const updatedEvaluations = data.map(evaluation => {
+        const evaluationResponses = responses?.filter(r => r.evaluation_id === evaluation.id) || [];
+        const progress = calculateEvaluationProgress(
+          evaluation.participants, 
+          evaluation.evaluation_type,
+          evaluation.evaluated_id,
+          evaluationResponses
+        );
+        const newStatus = determineEvaluationStatus(progress, evaluation.status);
+        
+        // If status has changed, update it in the database
+        if (newStatus !== evaluation.status) {
+          updateEvaluationStatus(evaluation.id, newStatus);
+        }
+        
+        return {
+          ...evaluation,
+          status: newStatus,
+          percentage: progress
+        };
+      });
+      
+      setEvaluaciones(updatedEvaluations);
     } catch (error) {
       console.error('Error al cargar evaluaciones:', error);
       toast.error('Error al cargar las evaluaciones');
@@ -29,24 +80,57 @@ const Evaluaciones: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-200 text-green-800';
-      case 'in_progress':
-        return 'bg-yellow-200 text-yellow-800';
-      default:
-        return 'bg-gray-200 text-gray-800';
+  const updateEvaluationStatus = async (evaluationId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('evaluations')
+        .update({ status: newStatus })
+        .eq('id', evaluationId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating evaluation status:', error);
+    }
+  };
+
+  const handleStartStopEvaluation = async (evaluacion: Evaluation) => {
+    try {
+      const isStarting = !evaluacion.start_date;
+      const { error } = await supabase
+        .from('evaluations')
+        .update({ 
+          start_date: isStarting ? new Date().toISOString() : null,
+          status: isStarting ? 'iniciado' : 'detenido'
+        })
+        .eq('id', evaluacion.id);
+
+      if (error) throw error;
+      
+      toast.success(isStarting ? 'Evaluación iniciada' : 'Evaluación detenida');
+      await cargarEvaluaciones();
+    } catch (error) {
+      console.error('Error al actualizar la evaluación:', error);
+      toast.error('Error al actualizar la evaluación');
     }
   };
 
   const handleIniciarEvaluacion = (evaluacionId: string) => {
-    // Aquí irá la lógica para iniciar la evaluación
-    console.log('Iniciando evaluación:', evaluacionId);
+    navigate(`/realizar-evaluacion/${evaluacionId}`);
   };
 
   const handleVerEvaluacion = (evaluacionId: string) => {
     navigate(`/evaluacion/${evaluacionId}`);
+  };
+
+  const getEvaluationType = (type: string) => {
+    switch (type) {
+      case '360':
+        return 'Evaluación 360°';
+      case 'simple':
+        return 'Evaluación Simple';
+      default:
+        return 'No definido';
+    }
   };
 
   if (loading) {
@@ -63,19 +147,30 @@ const Evaluaciones: React.FC = () => {
         <h3 className="text-xl font-semibold text-gray-800">Evaluaciones</h3>
         <Button 
           color="primary"
+          variant="ghost"
           onClick={() => navigate('/crear-evaluacion')}
         >
           Crear Evaluación
         </Button>
       </div>
+      {evaluaciones.length === 0 ? (
+         <div className="flex flex-col items-center justify-center text-center gap-4">
+              <ClipboardList size={48} className="text-gray-400" />
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">No hay evaluaciones creadas</h3>
+                <p className="text-gray-500">Comienza creando una nueva evaluación usando el botón superior.</p>
+              </div>
+            </div>
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="bg-gray-100">
-              <th className="px-4 py-2">Nombre de la Evaluación</th>
+              <th className="px-4 py-2">Nombre</th>
+              <th className="px-4 py-2">Tipo</th>
               <th className="px-4 py-2">Estado</th>
-              <th className="px-4 py-2">Progreso General</th>
-              <th className="px-4 py-2">Días Restantes</th>
+              <th className="px-4 py-2">Progreso</th>
+              <th className="px-4 py-2"></th>
               <th className="px-4 py-2">Acciones</th>
             </tr>
           </thead>
@@ -87,19 +182,31 @@ const Evaluaciones: React.FC = () => {
                 <tr key={evaluacion.id} className="border-b">
                   <td className="px-4 py-2">{evaluacion.title}</td>
                   <td className="px-4 py-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      getStatusColor(evaluacion.status)
-                    }`}>
-                      {evaluacion.status}
+                    <span className="text-sm font-medium text-gray-600">
+                      {getEvaluationType(evaluacion.evaluation_type)}
                     </span>
                   </td>
                   <td className="px-4 py-2">
-                    <Progress
+                    <Chip
+                      color={getStatusColor(evaluacion.status)}
+                      variant="flat"
                       size="sm"
-                      value={evaluacion.percentage}
-                      color={evaluacion.percentage === 100 ? "success" : "primary"}
-                      className="max-w-md"
-                    />
+                    >
+                      {getStatusText(evaluacion.status)}
+                    </Chip>
+                  </td>
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <Progress
+                        size="sm"
+                        value={evaluacion.percentage}
+                        color={evaluacion.percentage === 100 ? "success" : "primary"}
+                        className="max-w-md"
+                      />
+                      <span className="text-sm font-medium">
+                        {evaluacion.percentage}%
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-2">
                     <span className={`font-medium ${
@@ -114,23 +221,28 @@ const Evaluaciones: React.FC = () => {
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex gap-2">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onClick={() => handleVerEvaluacion(evaluacion.id)}
-                      >
-                        <Eye size={20} />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        color="primary"
-                        variant="flat"
-                        onClick={() => handleIniciarEvaluacion(evaluacion.id)}
-                      >
-                        <Play size={20} />
-                      </Button>
+                      <Tooltip content="Ver evaluación">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          color="primary"
+                          variant="ghost"
+                          onClick={() => handleVerEvaluacion(evaluacion.id)}
+                        >
+                          <Eye size={20} />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content={evaluacion.start_date ? "Detener evaluación" : "Iniciar evaluación"}>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          color={evaluacion.start_date ? "danger" : "success"}
+                          variant="ghost"
+                          onClick={() => handleStartStopEvaluation(evaluacion)}
+                        >
+                          {evaluacion.start_date ? <Pause size={20} /> : <Play size={20} />}
+                        </Button>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>
@@ -139,6 +251,7 @@ const Evaluaciones: React.FC = () => {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAction, PayloadAction } from '@reduxjs/toolkit';
 
 interface UIState {
   activeMenu: string;
@@ -8,15 +8,22 @@ interface UIState {
 }
 
 const initialState: UIState = {
-  activeMenu: 'mis-evaluaciones',
+  activeMenu: '',
   showSettings: false,
   theme: 'light',
   isSidebarOpen: false,
 };
 
+
+export const resetUI = createAction('ui/reset');
+
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(resetUI, () => initialState);
+  },
+
   reducers: {
     setActiveMenu: (state, action: PayloadAction<string>) => {
       state.activeMenu = action.payload;

@@ -77,19 +77,7 @@ const IniciarEvaluacion: React.FC = () => {
         <h3 className="text-xl font-semibold">Iniciar Nueva Evaluación</h3>
         
         <form onSubmit={manejarEnvio} className="space-y-8">
-          <div>
-            <Select
-              label="Seleccionar Empleado"
-              placeholder="Selecciona un empleado"
-              value={empleadoSeleccionado}
-              onChange={(e) => setEmpleadoSeleccionado(e.target.value)}
-              className="max-w-full"
-            >
-              <SelectItem key="1" value="1">Juan Pérez</SelectItem>
-              <SelectItem key="2" value="2">María García</SelectItem>
-              <SelectItem key="3" value="3">Carlos Rodríguez</SelectItem>
-            </Select>
-          </div>
+         
 
           <div className="space-y-8">
             {virtudes.map((virtud) => (

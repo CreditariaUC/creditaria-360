@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAction, PayloadAction } from '@reduxjs/toolkit';
 import type { Notification } from '../../types/notification.types';
 
 interface NotificationState {
@@ -15,9 +15,15 @@ const initialState: NotificationState = {
   error: null,
 };
 
+
+export const resetNotification = createAction('notification/reset');
+
 const notificationSlice = createSlice({
   name: 'notification',
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(resetNotification, () => initialState);
+  },
   reducers: {
     setNotifications: (state, action: PayloadAction<Notification[]>) => {
       state.notifications = action.payload;

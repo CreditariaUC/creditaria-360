@@ -1,7 +1,7 @@
 import React from 'react';
-import { Users, UserCircle, PieChart, ClipboardList, MessageSquare, PlayCircle, Mail, HelpCircle } from 'lucide-react';
+import { Users, UserCircle, PieChart, ClipboardList, MessageSquare, PlayCircle, Mail, HelpCircle, ClipboardPenLine } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -11,6 +11,8 @@ import AuthContainer from './components/Auth/AuthContainer';
 import PasswordReset from './components/Auth/PasswordReset';
 import CrearNuevaEvaluacion from './components/CrearNuevaEvaluacion';
 import VerEvaluacion from './components/VerEvaluacion';
+import RealizarEvaluacion from './components/Evaluacion/RealizarEvaluacion';
+import Evaluacion360 from './components/Evaluacion/Evaluacion360';
 import { useAuth } from './contexts/AuthContext';
 import { useAppSelector } from './hooks/useAppSelector';
 
@@ -20,17 +22,14 @@ const App: React.FC = () => {
 
   const getMenuItems = () => {
     const baseItems = [
-      { id: 'mis-evaluaciones', etiqueta: profile?.role === 'admin' ? 'Evaluaciones' : 'Mis Evaluaciones', icono: <ClipboardList size={20} /> },
-      { id: 'mi-retroalimentacion', etiqueta: 'Mi Retroalimentación', icono: <MessageSquare size={20} /> },
-      { id: 'rendimiento-equipo', etiqueta: 'Rendimiento', icono: <PieChart size={20} /> },
+      { id: 'mis-evaluaciones', etiqueta: 'Mis Evaluaciones', icono: <ClipboardPenLine size={20} /> },
       { id: 'faq', etiqueta: 'Ayuda', icono: <HelpCircle size={20} /> },
     ];
 
     if (profile?.role === 'admin') {
       return [
+        { id: 'evaluaciones', etiqueta: 'Evaluaciones', icono: <ClipboardList size={20} /> },
         ...baseItems,
-        { id: 'iniciar-evaluacion', etiqueta: 'Iniciar Nueva Evaluación', icono: <PlayCircle size={20} /> },
-        { id: 'enviar-campana', etiqueta: 'Enviar Campaña', icono: <Mail size={20} /> },
       ];
     }
 
@@ -38,10 +37,6 @@ const App: React.FC = () => {
   };
 
   const renderizarContenido = () => {
-    if ((menuActivo === 'iniciar-evaluacion' || menuActivo === 'enviar-campana') && profile?.role !== 'admin') {
-      return <Dashboard menuActivo="mis-evaluaciones" />;
-    }
-
     switch (menuActivo) {
       case 'enviar-campana':
         return <EnviarCampana />;
@@ -85,6 +80,22 @@ const App: React.FC = () => {
         <Route path="/evaluacion/:id" element={
           session ? renderAuthenticatedLayout(<VerEvaluacion />) : <AuthContainer />
         } />
+        <Route path="/realizar-evaluacion/:id" element={
+          session ? renderAuthenticatedLayout(<RealizarEvaluacion />) : <AuthContainer />
+        } />
+        <Route path="/evaluacion-360/:id" element={
+          session ? renderAuthenticatedLayout(<Evaluacion360 />) : <AuthContainer />
+        } />
+        <Route
+          path="/"
+          element={
+            !session ? (
+              <AuthContainer />
+            ) : (
+              <Navigate to={profile?.role === 'admin' ? '/evaluaciones' : '/mis-evaluaciones'} replace />
+            )
+          }
+        />
         <Route
           path="/*"
           element={
@@ -96,7 +107,7 @@ const App: React.FC = () => {
           }
         />
       </Routes>
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
     </BrowserRouter>
   );
 };

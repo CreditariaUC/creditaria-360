@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAction, PayloadAction } from '@reduxjs/toolkit';
 import type { Session } from '@supabase/supabase-js';
 import type { Profile } from '../../types/auth.types';
 
@@ -16,9 +16,15 @@ const initialState: AuthState = {
   error: null,
 };
 
+
+export const resetAuth = createAction('auth/reset');
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(resetAuth, () => initialState);
+  },
   reducers: {
     setSession: (state, action: PayloadAction<Session | null>) => {
       state.session = action.payload;

@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, Settings, LogOut, User, Menu } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import type { Session } from '@supabase/supabase-js';
 import AccountSettings from './Account/AccountSettings';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
+import { authService } from '../services/auth.service';
 import { setNotifications, markAsRead, markAllAsRead, removeNotification } from '../store/slices/notificationSlice';
 import { toggleSidebar } from '../store/slices/uiSlice';
 import { notificationService } from '../services/notification.service';
 import NotificationList from './Notifications/NotificationList';
+import { TRANSITION_EASINGS } from "@nextui-org/framer-transitions";
+
 import {
   Navbar,
   NavbarContent,
@@ -39,6 +43,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ session }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const notifications = useAppSelector(state => state.notification.notifications);
   const unreadCount = useAppSelector(state => state.notification.unreadCount);
@@ -89,11 +94,16 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const { error } = await authService.signOut();
+      if (error) {
+        throw error;
+      }
+      navigate('/');
       toast.success('Sesión cerrada exitosamente');
     } catch (error) {
+      console.error('Error during logout:', error);
       toast.error('Error al cerrar sesión');
+      navigate('/');
     }
   };
 
@@ -201,9 +211,43 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
       </Navbar>
 
       <Modal 
+        motionProps={{
+                variants: {
+                    enter: {
+                        scale: 1,
+                        y: "var(--slide-enter)",
+                        opacity: 1,
+                        transition: {
+                          scale: {
+                            duration: 0.4,
+                            ease: TRANSITION_EASINGS.ease,
+                          },
+                          opacity: {
+                            duration: 0.4,
+                            ease: TRANSITION_EASINGS.ease,
+                          },
+                          y: {
+                            type: "spring",
+                            bounce: 0,
+                            duration: 0.6,
+                          },
+                        },
+                      },
+                      exit: {
+                        scale: 1.1, // NextUI default 1.03
+                        y: "var(--slide-exit)",
+                        opacity: 0,
+                        transition: {
+                          duration: 0.3,
+                          ease: TRANSITION_EASINGS.ease,
+                        },
+                      },
+                }
+
+            }}
         isOpen={isOpen} 
         onClose={onClose}
-        size="2xl"
+        size="sm"
         scrollBehavior="inside"
       >
         <ModalContent>

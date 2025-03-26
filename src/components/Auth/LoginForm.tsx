@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { Mail, Lock, Loader2, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
-import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { setActiveMenu } from '../../store/slices/uiSlice';
 import { z } from 'zod';
 import { Input, Button, Card, CardBody, CardHeader, Divider } from '@nextui-org/react';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../Logo';
 
 const loginSchema = z.object({
@@ -16,9 +15,9 @@ const loginSchema = z.object({
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +58,7 @@ const LoginForm: React.FC = () => {
           .single();
 
         if (profile) {
-          dispatch(setActiveMenu(profile.role === 'admin' ? 'evaluaciones' : 'mis-evaluaciones'));
+          navigate(profile.role === 'admin' ? '/evaluaciones' : '/mis-evaluaciones');
         }
       }
       

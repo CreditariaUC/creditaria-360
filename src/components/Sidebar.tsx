@@ -1,24 +1,26 @@
 import React, { useEffect } from 'react';
-import { Users } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
-import { setActiveMenu, closeSidebar } from '../store/slices/uiSlice';
-import { Button, Link } from '@nextui-org/react';
+import { closeSidebar } from '../store/slices/uiSlice';
+import { Button } from '@nextui-org/react';
 import Logo from './Logo';
 
 interface ElementoMenu {
   id: string;
   etiqueta: string;
   icono: React.ReactNode;
+  ruta: string;
 }
 
 interface PropsSidebar {
   elementosMenu: ElementoMenu[];
-  menuActivo: string;
 }
 
-const Sidebar: React.FC<PropsSidebar> = ({ elementosMenu, menuActivo }) => {
+const Sidebar: React.FC<PropsSidebar> = ({ elementosMenu }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const isSidebarOpen = useAppSelector(state => state.ui.isSidebarOpen);
 
   useEffect(() => {
@@ -32,8 +34,8 @@ const Sidebar: React.FC<PropsSidebar> = ({ elementosMenu, menuActivo }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [dispatch]);
 
-  const handleMenuClick = (menuId: string) => {
-    dispatch(setActiveMenu(menuId));
+  const handleMenuClick = (ruta: string) => {
+    navigate(ruta);
     if (window.innerWidth < 1024) {
       dispatch(closeSidebar());
     }
@@ -64,14 +66,12 @@ const Sidebar: React.FC<PropsSidebar> = ({ elementosMenu, menuActivo }) => {
             {elementosMenu.map((item) => (
               <Button
                 key={item.id}
-                href="#"
-                as={Link}
-                variant={menuActivo === item.id ? "flat" : "light"}
+                variant={location.pathname === item.ruta ? "flat" : "light"}
                 className={`w-full justify-start ${
-                  menuActivo === item.id ? 'bg-primary/20' : ''
+                  location.pathname === item.ruta ? 'bg-primary/20' : ''
                 }`}
                 startContent={item.icono}
-                onClick={() => handleMenuClick(item.id)}
+                onClick={() => handleMenuClick(item.ruta)}
               >
                 {item.etiqueta}
               </Button>
@@ -79,7 +79,6 @@ const Sidebar: React.FC<PropsSidebar> = ({ elementosMenu, menuActivo }) => {
           </nav>
         </div>
         <div className="p-4 text-center text-sm text-gray-500 border-t border-gray-200">
-          
         </div>
       </div>
     </>

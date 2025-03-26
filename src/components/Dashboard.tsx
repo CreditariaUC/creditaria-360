@@ -1,9 +1,6 @@
 import React from 'react';
 import Evaluaciones from './Evaluaciones';
 import MisEvaluaciones from './MisEvaluaciones';
-import MiRetroalimentacion from './MiRetroalimentacion';
-import IniciarEvaluacion from './IniciarEvaluacion';
-import RendimientoEquipo from './RendimientoEquipo';
 
 interface PropsDashboard {
   menuActivo: string;
@@ -16,14 +13,8 @@ const Dashboard: React.FC<PropsDashboard> = ({ menuActivo }) => {
         return <Evaluaciones />;
       case 'mis-evaluaciones':
         return <MisEvaluaciones />;
-      case 'mi-retroalimentacion':
-        return <MiRetroalimentacion />;
-      case 'iniciar-evaluacion':
-        return <IniciarEvaluacion />;
-      case 'rendimiento-equipo':
-        return <RendimientoEquipo />;
       default:
-        return <div> </div>;
+        return null;
     }
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, UserCircle, PieChart, ClipboardList, MessageSquare, PlayCircle, Mail, HelpCircle, ClipboardPenLine } from 'lucide-react';
+import { ClipboardPenLine, HelpCircle, ClipboardList } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
@@ -14,37 +14,39 @@ import VerEvaluacion from './components/VerEvaluacion';
 import RealizarEvaluacion from './components/Evaluacion/RealizarEvaluacion';
 import Evaluacion360 from './components/Evaluacion/Evaluacion360';
 import { useAuth } from './contexts/AuthContext';
-import { useAppSelector } from './hooks/useAppSelector';
 
 const App: React.FC = () => {
-  const menuActivo = useAppSelector(state => state.ui.activeMenu);
   const { session, profile, loading } = useAuth();
 
   const getMenuItems = () => {
     const baseItems = [
-      { id: 'mis-evaluaciones', etiqueta: 'Mis Evaluaciones', icono: <ClipboardPenLine size={20} /> },
-      { id: 'faq', etiqueta: 'Ayuda', icono: <HelpCircle size={20} /> },
+      { 
+        id: 'mis-evaluaciones', 
+        etiqueta: 'Mis Evaluaciones', 
+        icono: <ClipboardPenLine size={20} />,
+        ruta: '/mis-evaluaciones'
+      },
+      { 
+        id: 'faq', 
+        etiqueta: 'Ayuda', 
+        icono: <HelpCircle size={20} />,
+        ruta: '/faq'
+      },
     ];
 
     if (profile?.role === 'admin') {
       return [
-        { id: 'evaluaciones', etiqueta: 'Evaluaciones', icono: <ClipboardList size={20} /> },
+        { 
+          id: 'evaluaciones', 
+          etiqueta: 'Evaluaciones', 
+          icono: <ClipboardList size={20} />,
+          ruta: '/evaluaciones'
+        },
         ...baseItems,
       ];
     }
 
     return baseItems;
-  };
-
-  const renderizarContenido = () => {
-    switch (menuActivo) {
-      case 'enviar-campana':
-        return <EnviarCampana />;
-      case 'faq':
-        return <Faq />;
-      default:
-        return <Dashboard menuActivo={menuActivo} />;
-    }
   };
 
   if (loading) {
@@ -57,10 +59,7 @@ const App: React.FC = () => {
 
   const renderAuthenticatedLayout = (children: React.ReactNode) => (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar 
-        elementosMenu={getMenuItems()} 
-        menuActivo={menuActivo}
-      />
+      <Sidebar elementosMenu={getMenuItems()} />
       <div className="flex-1">
         <Header session={session} />
         <main className="p-6 overflow-x-hidden overflow-y-auto">
@@ -86,6 +85,15 @@ const App: React.FC = () => {
         <Route path="/evaluacion-360/:id" element={
           session ? renderAuthenticatedLayout(<Evaluacion360 />) : <AuthContainer />
         } />
+        <Route path="/evaluaciones" element={
+          session ? renderAuthenticatedLayout(<Dashboard menuActivo="evaluaciones" />) : <AuthContainer />
+        } />
+        <Route path="/mis-evaluaciones" element={
+          session ? renderAuthenticatedLayout(<Dashboard menuActivo="mis-evaluaciones" />) : <AuthContainer />
+        } />
+        <Route path="/faq" element={
+          session ? renderAuthenticatedLayout(<Faq />) : <AuthContainer />
+        } />
         <Route
           path="/"
           element={
@@ -97,13 +105,9 @@ const App: React.FC = () => {
           }
         />
         <Route
-          path="/*"
+          path="*"
           element={
-            !session ? (
-              <AuthContainer />
-            ) : (
-              renderAuthenticatedLayout(renderizarContenido())
-            )
+            <Navigate to="/" replace />
           }
         />
       </Routes>

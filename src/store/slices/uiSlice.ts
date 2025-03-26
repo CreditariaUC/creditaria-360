@@ -1,19 +1,16 @@
 import { createSlice, createAction, PayloadAction } from '@reduxjs/toolkit';
 
 interface UIState {
-  activeMenu: string;
   showSettings: boolean;
   theme: 'light' | 'dark';
   isSidebarOpen: boolean;
 }
 
 const initialState: UIState = {
-  activeMenu: '',
   showSettings: false,
   theme: 'light',
   isSidebarOpen: false,
 };
-
 
 export const resetUI = createAction('ui/reset');
 
@@ -23,11 +20,7 @@ const uiSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(resetUI, () => initialState);
   },
-
   reducers: {
-    setActiveMenu: (state, action: PayloadAction<string>) => {
-      state.activeMenu = action.payload;
-    },
     toggleSettings: (state) => {
       state.showSettings = !state.showSettings;
     },
@@ -44,7 +37,6 @@ const uiSlice = createSlice({
 });
 
 export const { 
-  setActiveMenu, 
   toggleSettings, 
   setTheme, 
   toggleSidebar,
